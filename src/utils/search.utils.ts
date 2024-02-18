@@ -28,12 +28,6 @@ export function mapSearchRequestForMongo(searchModel: SearchRequest) {
 		skip: searchModel.offset || 0,
 	};
 
-	if (searchModel.sortField) {
-		queryOptions.sort = {
-			[searchModel.sortField]: !searchModel.descending ? -1 : 1,
-		};
-	}
-
 	const filterQuery: FilterQuery<unknown> = {};
 
 	if (searchModel.stringFilters) {
