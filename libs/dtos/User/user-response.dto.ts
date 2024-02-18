@@ -7,13 +7,13 @@ export default class UserResponseDto {
     id: string;
 
     @Expose()
-    login: string;
-  
-    @Expose()
-    password: string;
-  
-    @Expose()
-    name?: string;
+    name: string;
+
+	@Expose()
+    count: number;
+
+	@Expose()
+    currency: string;
 
     constructor(partial: Partial<UserResponseDto>) {
         Object.assign(this, partial);

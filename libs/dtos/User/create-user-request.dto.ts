@@ -1,14 +1,10 @@
 // @ts-ignore
-import { IsString, IsOptional } from 'class-validator';
+import { IsString, IsInt } from 'class-validator';
 
 export default class CreateUserRequestDto {
   @IsString()
-  login: string;
+  name: string;
 
-  @IsString()
-  password: string;
-
-  @IsString()
-  @IsOptional()
-  name?: string;
+  @IsInt()
+  count: number;
 }
