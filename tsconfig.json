@@ -16,6 +16,12 @@
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
-    "noFallthroughCasesInSwitch": false
+    "noFallthroughCasesInSwitch": false,
+	"paths": {	
+	  "@libs/*": ["./libs/*"],
+      "@app/*": ["./src/*"],
+      "class-validator": ["./node_modules/class-validator"],
+	  "class-transformer": ["./node_modules/class-transformer"]
+    },
   }
 }
