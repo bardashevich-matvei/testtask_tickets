@@ -5,6 +5,7 @@ import { throws } from 'assert';
 import { Ticket } from './schemas/ticket.schema';
 import { User } from '../user/schemas/user.schema';
 import { checkReservation } from '@app/utils/checkReservation.utils';
+import { SellingOption } from '@libs/enums/SellingOptions.enum';
 
 @Injectable()
 export class TicketService {
@@ -37,53 +38,17 @@ export class TicketService {
 		return this.ticketRepository.delete(id);
 	}
 
-	async reserveAll(body: any): Promise<any> {
-		const { user } = body;
-		const userInfo = await this.userService.findOne(user.name);
-		const allTickets = await this.ticketRepository.findAll();
-
-		allTickets.forEach((item: Ticket) => {
-			item.reservedTime = Date.now();
-			item.reservedBy = userInfo.name;
-		});
-
-		return await this.ticketRepository.updateMany(allTickets);
-	}
-
-	async reserveEven(body: any): Promise<any> {
-		const { user, ticketIds } = body;
-		if ( ticketIds.length % 2 !== 0) {
-			throw 'count of the tickets is not even'
-		}
-		const userInfo = await this.userService.findOne(user.name);
-		const tickets = await this.ticketRepository.findAll({
-			_id: { $in: ticketIds }
-		});
-
-		tickets.forEach((item: Ticket) => {
-			item.reservedTime = Date.now();
-			item.reservedBy = userInfo.name;
-		});
-
-		return await this.ticketRepository.updateMany(tickets);
-	}
-
-	async reserveAvoidOne(body: any): Promise<any> {
+	async reserve(body: any): Promise<any> {
 		const { user, ticketIds } = body;
 		const userInfo = await this.userService.findOne(user.name);
-		const allTickets = await this.ticketRepository.findAll();
-		const tickets = allTickets.filter((item) => ticketIds.includes(item._id));
+		const reservedTickets = await this.ticketRepository.findAll({_id: { $in: ticketIds}});
 
-		if (allTickets.length - tickets.length === 1) {
-			throw 'cant leave only 1 ticket available'
-		}
-
-		tickets.forEach((item: Ticket) => {
+		reservedTickets.forEach((item: Ticket) => {
 			item.reservedTime = Date.now();
 			item.reservedBy = userInfo.name;
 		});
 
-		return await this.ticketRepository.updateMany(tickets);
+		return await this.ticketRepository.updateMany(reservedTickets);
 	}
 
 	async buy(body: any): Promise<any> {
@@ -92,15 +57,36 @@ export class TicketService {
 		if (userInfo!) {
 			throw 'cant find a user';
 		}
-
-		const allReservedTickets = await this.ticketRepository.findAll({resevedBy: userInfo.name});
+		
+		const allTickets = await this.ticketRepository.findAll({sales: false});
+		const allReservedTickets = allTickets.filter((item) => item.resevedBy = userInfo.name);
 		const totalAmount = allReservedTickets.reduce((acc, item) => acc = item.price, 0);
 
 		if (userInfo.count < totalAmount) {
-			throw 'not enoght money!';
+			throw 'not enough money!';
+		}
+
+		const evenTickets = allReservedTickets.filter((item: Ticket) => item.sellingOption === SellingOption.even);
+		const allTogetherTickets = allReservedTickets.filter((item: Ticket) => item.sellingOption === SellingOption.allTogether);
+		const avoidOneTickets = allReservedTickets.filter((item: Ticket) => item.sellingOption === SellingOption.avoidOne);
+
+		if (evenTickets.length && allReservedTickets.length % 2 !== 0) {
+			throw 'count of the tickets is not even';
+		}
+
+		if (allTogetherTickets.length && allTogetherTickets.length !== allReservedTickets.length) {
+			throw 'count of the tickets is max';
+		}
+
+		if (avoidOneTickets.length && allTickets.length - allReservedTickets.length === 1) {
+			throw 'cant leave only 1 ticket available'
 		}
 
 		if (checkReservation(allReservedTickets)) {
+			allReservedTickets.forEach((item: Ticket) => {
+				item.reservedTime = null;
+				item.sales = true;
+			});
 			const purchasedTickets = await this.ticketRepository.updateMany(allReservedTickets);
 			userInfo.count -= totalAmount;
 			await this.userService.updateOne(userInfo);

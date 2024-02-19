@@ -1,3 +1,4 @@
+import { SellingOption } from '@libs/enums/SellingOptions.enum';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 import { v4 as uuidv4 } from 'uuid';
@@ -28,6 +29,9 @@ export class Ticket {
 
 	@Prop({ require: false })
 	reservedBy?: string;
+
+	@Prop({ require: true })
+	sellingOption: SellingOption;
 
 	@Prop({ require: false, default: false })
 	sales: boolean;
