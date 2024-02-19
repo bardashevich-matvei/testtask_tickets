@@ -1,9 +1,10 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Ticket } from './schemas/ticket.schema';
-import { FilterQuery, Model } from 'mongoose';
+import { Model } from 'mongoose';
 import { SearchRequest } from 'libs/search/SearchRequest';
 import { mapSearchRequestForMongo } from '@app/utils/search.utils';
+import TicketResponseDto from '@libs/dtos/Tickets/ticket-reposne.dto';
 
 @Injectable()
 export class TicketRepository {
@@ -15,7 +16,7 @@ export class TicketRepository {
 	async create(ticket: any): Promise<any> {
 		const savedTicket = new this.ticketModel(ticket);
 		await savedTicket.save();
-		return savedTicket.toObject();
+		return new TicketResponseDto(savedTicket.toObject());
 	}
 
 	async findAll(filter?: any, limit?: number, offset?: number): Promise<any[]> {
@@ -23,11 +24,11 @@ export class TicketRepository {
 		const { queryOptions } = mapSearchRequestForMongo(selector);
 
 		return (await this.ticketModel.find(filter, null, queryOptions).lean().exec()).map(
-			(item) => item,
+			(item) => new TicketResponseDto(item),
 		);
 	}
 
-	async update(id: string, ticket: any): Promise<any> {
+	async update(id: string, ticket: any): Promise<TicketResponseDto> {
 		const updatedTicket = await this.ticketModel
 			.findByIdAndUpdate(id, ticket, { new: true })
 			.lean()
@@ -36,28 +37,31 @@ export class TicketRepository {
 		if (!updatedTicket) {
 			throw new BadRequestException(`Ticket not found!`);
 		}
-		return updatedTicket;
+		return new TicketResponseDto(updatedTicket);
 	}
 
 	async delete(id: string): Promise<any> {
 		const deletedTicket = await this.ticketModel.findByIdAndRemove(id).lean().exec();
-		return deletedTicket || {};
+		return new TicketResponseDto(deletedTicket || {});
 	}
 
 	async findOneById(id: string): Promise<any> {
 		const user = await this.ticketModel.findById(id).lean().exec();
-		return user || {};
+		return new TicketResponseDto(user || {});
 	}
 
-	async updateMany(tickets: any): Promise<any> {
+	async updateMany(filter?: any, data?: any): Promise<any> {
 		const updatedTickets = await this.ticketModel
-			.updateMany({_id: { $in: tickets.map((item: Ticket) => item._id )}}, tickets)
+			.updateMany(filter, data)
 			.lean()
 			.exec();
+		
+		console.log(updatedTickets);
 		
 		if (!updatedTickets) {
 			throw new BadRequestException(`Ticket not found!`);
 		}
+
 		return updatedTickets;
 	}
 }

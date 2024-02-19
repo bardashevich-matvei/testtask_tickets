@@ -18,4 +18,4 @@ export default class UserResponseDto {
     constructor(partial: Partial<UserResponseDto>) {
         Object.assign(this, partial);
     }
-  }
+}

@@ -1,5 +1,5 @@
 export enum SellingOption {
-    even,
-	allTogether,
-	avoidOne
+    even = 'even',
+	allTogether = 'allTogether',
+	avoidOne = 'avoidOne'
 }
