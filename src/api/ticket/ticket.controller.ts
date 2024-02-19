@@ -37,11 +37,23 @@ export class TicketController {
 		return this.ticketService.update(id, ticket);
 	}
 
-	@Put(':id')
-	async buy(@Body() ticket: any, @Param('id') id: string): Promise<any> {
-		return this.ticketService.update(id, ticket);
+	@Post("buy")
+	async buy(@Body() body: any): Promise<any> {
+		return this.ticketService.buy(body);
 	}
 
+	@Post("reserveAll")
+	async reserveAll(@Body() body: any): Promise<any> {
+		return await this.ticketService.reserveAll(body);
+	}
 
+	@Post("reserveEven")
+	async reserveEven(@Body() body: any): Promise<any> {
+		return await this.ticketService.reserveEven(body);
+	}
 
+	@Post("reserveAvoidOne")
+	async reserveAvoidOne(@Body() body: any): Promise<any> {
+		return await this.ticketService.reserveAvoidOne(body);
+	}
 }

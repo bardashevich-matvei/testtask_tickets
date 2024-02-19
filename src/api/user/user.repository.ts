@@ -20,11 +20,11 @@ export class UserRepository {
 		return new UserResponseDto(savedUser.toObject());
 	}
 
-	async findAll(limit?: number, offset?: number): Promise<UserResponseDto[]> {
+	async findAll(filter?: any, limit?: number, offset?: number): Promise<UserResponseDto[]> {
 		const selector: SearchRequest = { limit: limit, offset: offset };
-		const { filterQuery, queryOptions } = mapSearchRequestForMongo(selector);
+		const { queryOptions } = mapSearchRequestForMongo(selector);
 
-		return (await this.userModel.find(filterQuery, null, queryOptions).lean().exec()).map(
+		return (await this.userModel.find(filter, null, queryOptions).lean().exec()).map(
 			(item) => new UserResponseDto(item),
 		);
 	}
@@ -35,4 +35,13 @@ export class UserRepository {
 		return new UserResponseDto(deletedUser || {});
 	}
 
+	async findOneByName(name: string): Promise<UserResponseDto> {
+		const user = await this.userModel.findOne({name: name}).lean().exec();
+		return new UserResponseDto(user || {});
+	}
+
+	async updateOne(user: User): Promise<any> {
+		const updatedUser = await this.userModel.updateOne({name: user.name}, { $set: { count: user.count}}).lean().exec();
+		return updatedUser || {};
+	}
 }

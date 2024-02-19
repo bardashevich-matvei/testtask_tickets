@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Ticket } from './schemas/ticket.schema';
-import { Model } from 'mongoose';
+import { FilterQuery, Model } from 'mongoose';
 import { SearchRequest } from 'libs/search/SearchRequest';
 import { mapSearchRequestForMongo } from '@app/utils/search.utils';
 
@@ -18,11 +18,11 @@ export class TicketRepository {
 		return savedTicket.toObject();
 	}
 
-	async findAll(limit?: number, offset?: number): Promise<any[]> {
+	async findAll(filter?: any, limit?: number, offset?: number): Promise<any[]> {
 		const selector: SearchRequest = { limit: limit, offset: offset };
-		const { filterQuery, queryOptions } = mapSearchRequestForMongo(selector);
+		const { queryOptions } = mapSearchRequestForMongo(selector);
 
-		return (await this.ticketModel.find(filterQuery, null, queryOptions).lean().exec()).map(
+		return (await this.ticketModel.find(filter, null, queryOptions).lean().exec()).map(
 			(item) => item,
 		);
 	}
@@ -47,5 +47,17 @@ export class TicketRepository {
 	async findOneById(id: string): Promise<any> {
 		const user = await this.ticketModel.findById(id).lean().exec();
 		return user || {};
+	}
+
+	async updateMany(tickets: any): Promise<any> {
+		const updatedTickets = await this.ticketModel
+			.updateMany({_id: { $in: tickets.map((item: Ticket) => item._id )}}, tickets)
+			.lean()
+			.exec();
+		
+		if (!updatedTickets) {
+			throw new BadRequestException(`Ticket not found!`);
+		}
+		return updatedTickets;
 	}
 }

@@ -22,6 +22,15 @@ export class Ticket {
 
 	@Prop({ require: true })
 	price: number;
+
+	@Prop({ require: false })
+	reservedTime?: number;
+
+	@Prop({ require: false })
+	reservedBy?: string;
+
+	@Prop({ require: false, default: false })
+	sales: boolean;
 }
 
 export const TicketSchema = SchemaFactory.createForClass(Ticket);
